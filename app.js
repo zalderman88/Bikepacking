@@ -375,7 +375,7 @@ function initControls(){
   $("pinBtn").onclick=pinCurrent;
   $("copyBtn").onclick=copyItinerary;
   if(window.DSRP_APP){ const sb=$("shareBtn"); sb.hidden=false; sb.onclick=async()=>{
-    const url=location.origin+location.pathname+"?plan="+planParam(), title="Dry Season Route Planner", text=`${tripName(routeOf(),S.dir)}, from ${fmtD(parseD(S.start))}`;
+    const url=location.origin+location.pathname+"?plan="+planParam(), title="Bikepacking Route Planner", text=`${tripName(routeOf(),S.dir)}, from ${fmtD(parseD(S.start))}`;
     if(navigator.share){ try{ await navigator.share({title,text,url}); }catch(e){} return; }
     try{ await navigator.clipboard.writeText(url); $("shareLbl").textContent="Link copied"; setTimeout(()=>$("shareLbl").textContent="Share plan",1800); }catch(e){ window.prompt && window.prompt("Copy this link", url); } };
     if(SHARED){ try{ history.replaceState(null,"",location.pathname); }catch(e){} }
@@ -875,7 +875,7 @@ function renderPins(){
 /* ---------- copy itinerary ---------- */
 function itineraryText(sim){
   const r=routeOf(); const L=[];
-  L.push(`Dry Season Route Planner: ${tripName(r,S.dir)}`);
+  L.push(`Bikepacking Route Planner: ${tripName(r,S.dir)}`);
   L.push(`Start ${fmtD(sim.t0)} · ${sim.total} days (${(sim.total/30.44).toFixed(1)} months) · finish ${fmtD(sim.end)}`);
   L.push(`${S.kmpd} km riding days · rest every ${S.rest} days · ${S.brk}-day breaks · ${Math.round(sim.inSeason*100)}% of the route in season`);
   L.push("");

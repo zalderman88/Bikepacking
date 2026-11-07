@@ -1,4 +1,4 @@
-# Dry Season Route Planner
+# Bikepacking Route Planner
 
 Plan a 6 to 12 month bikepacking trip through Mexico, Central and South America around the dry seasons. Pick a route and a start date and every day of the ride is placed on a season map, scored against the weather where you will be, and split into legs you can ride on dirt, on the main road, or skip by bus.
 

@@ -1,7 +1,7 @@
 {
   "id": "./",
-  "name": "Dry Season Route Planner",
-  "short_name": "Dry Season",
+  "name": "Bikepacking Route Planner",
+  "short_name": "Bikepacking",
   "description": "Plan a 6 to 12 month bikepacking trip through the Americas around the dry seasons: season map, start-week finder, weather and leg-by-leg dirt or main-road choices.",
   "start_url": "./",
   "scope": "./",

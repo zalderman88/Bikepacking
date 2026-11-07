@@ -1,13 +1,13 @@
-/* Offline support for the Dry Season Route Planner.
+/* Offline support for the Bikepacking Route Planner.
    Pages: network first (so updates arrive), falling back to the saved copy when offline.
    Everything else: saved copy first. A new deploy changes VERSION, which refreshes the saved copy. */
-const VERSION = "aeefabb078";
+const VERSION = "e04ea496b1";
 const CACHE = "dsrp-" + VERSION;
 const ASSETS = [
   "./",
   "index.html",
   "geo.js?v=8c798eafef",
-  "app.js?v=1f6196b8a0",
+  "app.js?v=16cd6b86db",
   "vendor/d3.min.js",
   "fonts.css",
   "fonts/Archivo-400-900-latin-ext.woff2",
