@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Dry Season Route Planner</title>
+<meta name="description" content="Plan a 6 to 12 month bikepacking trip through the Americas around the dry seasons: season map, start-week finder, weather and leg-by-leg dirt or main-road choices.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon-48.png" sizes="48x48" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#f7f9f9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#142128" media="(prefers-color-scheme: dark)">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Dry Season Route Planner">
+<meta property="og:description" content="Plan a 6 to 12 month bikepacking trip through the Americas around the dry seasons: season map, start-week finder, weather and leg-by-leg dirt or main-road choices.">
+<meta property="og:url" content="https://zalderman88.github.io/Bikepacking/">
+<meta property="og:image" content="https://zalderman88.github.io/Bikepacking/og.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preload" href="fonts/Archivo-400-900-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="hero.webp" as="image">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<link rel="stylesheet" href="fonts.css">
+<style>
+/* Layout: an atlas console. A painted panorama masthead (made in Canva), a sticky trip bar, then the map pinned on the left while the analysis scrolls on the right. On phones it is one column with a bottom tab bar. */
+:root{
+  --bg:#e7ecee; --surface:#f7f9f9; --raised:#ffffff; --sunk:#dce4e7; --ink:#1b2a33; --ink-2:#465862; --ink-3:#6f818a; --rule:#c6d1d6;
+  --accent:#23485e; --accent-ink:#f3f7f8; --accent-soft:#d3e1e8; --glow:#d98b3a; --focus:#2f6fb3;
+  --land:#dfe5e2; --land-edge:#b5c1c1; --sea:#e0eaee; --route-ghost:#8e9fa6; --case:#ffffff; --scrim:rgba(18,32,41,.62); --cell-ink:#10201a;
+  --c-D:#5aa469; --c-M:#a6cf8a; --c-B:#e2c85e; --c-H:#ec9437; --c-K:#7fc1d3; --c-W:#4774bf; --c-C:#8a73c4; --c-T:#b3bcb6;
+  --bad:#b4442c; --warn:#9d6210; --good:#2d7a47;
+  --shadow:0 1px 2px rgba(20,35,45,.06),0 10px 28px -14px rgba(20,35,45,.28);
+  --f-display:"Archivo","Arial Narrow",Arial,sans-serif;
+  --f-body:"Atkinson Hyperlegible Next","Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-mono:"Atkinson Hyperlegible Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  --r:16px; --r-sm:10px; --tb-h:56px; --nav-h:0px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e171c; --surface:#142128; --raised:#192932; --sunk:#1c2c35; --ink:#e2e9ec; --ink-2:#a5b5bd; --ink-3:#74868f; --rule:#283a44;
+  --accent:#9dc5da; --accent-ink:#0c1a21; --accent-soft:#1f3846; --glow:#f0b26c; --focus:#86b9ee;
+  --land:#22323a; --land-edge:#3b4d56; --sea:#101c22; --route-ghost:#5c6e76; --case:#0b1418; --scrim:rgba(6,12,16,.7); --cell-ink:#0d1a15;
+  --c-D:#5fb26f; --c-M:#9ccb7f; --c-B:#d9bf55; --c-H:#ef9a40; --c-K:#78bfd1; --c-W:#5c8ad6; --c-C:#9d87d8; --c-T:#56625c;
+  --bad:#f08a72; --warn:#e7b04f; --good:#7fd398;
+  --shadow:0 1px 2px rgba(0,0,0,.35),0 12px 32px -14px rgba(0,0,0,.7); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e171c; --surface:#142128; --raised:#192932; --sunk:#1c2c35; --ink:#e2e9ec; --ink-2:#a5b5bd; --ink-3:#74868f; --rule:#283a44;
+  --accent:#9dc5da; --accent-ink:#0c1a21; --accent-soft:#1f3846; --glow:#f0b26c; --focus:#86b9ee;
+  --land:#22323a; --land-edge:#3b4d56; --sea:#101c22; --route-ghost:#5c6e76; --case:#0b1418; --scrim:rgba(6,12,16,.7); --cell-ink:#0d1a15;
+  --c-D:#5fb26f; --c-M:#9ccb7f; --c-B:#d9bf55; --c-H:#ef9a40; --c-K:#78bfd1; --c-W:#5c8ad6; --c-C:#9d87d8; --c-T:#56625c;
+  --bad:#f08a72; --warn:#e7b04f; --good:#7fd398;
+  --shadow:0 1px 2px rgba(0,0,0,.35),0 12px 32px -14px rgba(0,0,0,.7); color-scheme:dark}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:calc(var(--tb-h) + 12px + env(safe-area-inset-top,0px))}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;-webkit-tap-highlight-color:transparent;padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:40;background:var(--surface)}
+html.noscroll,html.noscroll body{overflow:hidden}
+h1,h2,h3{font-family:var(--f-display);margin:0;line-height:1.02;text-wrap:balance}
+h2{font-size:1.06rem;font-weight:780;font-stretch:118%;text-transform:uppercase;letter-spacing:.05em}
+h3{font-size:1.12rem;font-weight:700;font-stretch:96%;letter-spacing:.005em}
+p{margin:0}
+a{color:var(--accent);text-underline-offset:2px}
+button{font:inherit;color:inherit}
+.wrap{max-width:1480px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.cap{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.06em;color:var(--ink-3)}
+.muted{color:var(--ink-2)}
+.num{font-variant-numeric:tabular-nums}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible,[tabindex]:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+
+/* ---------- hero ---------- */
+.hero{position:relative;isolation:isolate;overflow:hidden;background:var(--accent);min-height:clamp(300px,36vw,500px);display:flex;align-items:flex-start}
+.hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 58%;z-index:-2}
+.hero::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,var(--scrim) 0%,rgba(18,32,41,.18) 52%,transparent 70%),linear-gradient(0deg,var(--bg) 0,transparent 64px)}
+:root[data-theme="dark"] .hero img{filter:brightness(.78) saturate(.9)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .hero img{filter:brightness(.78) saturate(.9)}}
+.hero-in{width:100%;padding-block:clamp(22px,4vw,48px) 96px;display:grid;gap:10px;color:#fff}
+.hero .kicker{font-family:var(--f-mono);font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;opacity:.9}
+.hero h1{font-size:clamp(2.3rem,6.4vw,5rem);font-weight:860;font-stretch:122%;text-transform:uppercase;letter-spacing:-.005em;line-height:.92;text-shadow:0 2px 18px rgba(10,20,26,.35)}
+.hero h1 span{display:block;font-stretch:70%;font-weight:620;letter-spacing:.02em;font-size:.52em;margin-top:.18em;color:#ffe2bf}
+.hero .lede{max-width:52ch;font-size:clamp(.95rem,1.4vw,1.08rem);text-shadow:0 1px 10px rgba(10,20,26,.5)}
+.hero .credit{position:absolute;right:max(12px,env(safe-area-inset-right,0px));bottom:10px;font:600 .66rem var(--f-mono);letter-spacing:.06em;color:var(--ink-2);background:var(--surface);opacity:.85;padding:2px 8px;border-radius:999px}
+
+/* ---------- trip bar ---------- */
+.tripbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:var(--surface);border-bottom:1px solid var(--rule);box-shadow:0 6px 18px -16px rgba(0,0,0,.5)}
+.tripbar .wrap{min-height:var(--tb-h);display:flex;align-items:center;gap:12px 18px;padding-block:6px}
+.tb-route{display:flex;flex-direction:column;min-width:0;flex:1 1 auto}
+.tb-route b{font:780 1rem/1.15 var(--f-display);font-stretch:108%;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-route span{font:.78rem var(--f-mono);color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-stats{display:flex;align-items:center;gap:6px 16px;flex:none}
+.tb-stat{display:flex;flex-direction:column;align-items:flex-end;line-height:1.05}
+.tb-stat b{font:720 1.32rem var(--f-display);font-stretch:76%;font-variant-numeric:tabular-nums}
+.tb-stat span{font:.66rem var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.pill{display:inline-flex;align-items:center;gap:6px;font:600 .7rem var(--f-mono);letter-spacing:.05em;text-transform:uppercase;padding:4px 9px;border-radius:999px;border:1px solid currentColor;white-space:nowrap}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.pill.good{color:var(--good)} .pill.bad{color:var(--bad)} .pill.warn{color:var(--warn)}
+@media (max-width:640px){ .tb-hide{display:none} .tb-stat b{font-size:1.18rem} .tripbar .wrap{gap:10px} .pill{padding:4px 7px} .pill .pl{display:none} }
+
+/* ---------- console grid ---------- */
+.console{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;padding-block:18px 40px}
+.pane-main{display:contents}
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:var(--r);padding:18px;min-width:0}
+.card-h{display:flex;align-items:baseline;justify-content:space-between;gap:6px 14px;flex-wrap:wrap;margin-bottom:14px}
+.card-h .cap{max-width:46ch}
+@media (min-width:980px){
+  .console{grid-template-columns:minmax(0,5fr) minmax(0,7fr);align-items:start;gap:22px}
+  .pane-main{display:flex;flex-direction:column;gap:18px;min-width:0}
+  .map-card{position:sticky;top:calc(var(--tb-h) + 14px + env(safe-area-inset-top,0px));grid-row:1/span 1}
+}
+@media (max-width:979px){
+  :root{--nav-h:64px}
+  #s-summary{order:1} #s-picks{order:2} .map-card{order:3} #s-when{order:4} #s-plan{order:5} #s-weather{order:6} #s-flags{order:7} #s-length{order:8} #s-compare{order:9} #s-legs{order:10} #s-season{order:11} #s-sources{order:12}
+}
+@media (max-width:520px){ body{font-size:14.5px} .card{padding:14px 12px;border-radius:14px} }
+
+/* ---------- chips, segments, inputs ---------- */
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid var(--rule);background:var(--raised);border-radius:12px;padding:8px 12px;min-height:48px;cursor:pointer;display:inline-flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:1px;text-align:left;transition:border-color .15s,background .15s,transform .15s}
+.chip:hover{border-color:var(--ink-3)}
+.chip:active{transform:scale(.98)}
+.chip b{font:760 .98rem var(--f-display);font-stretch:96%;letter-spacing:.01em}
+.chip small{font-size:.76rem;color:var(--ink-2)}
+.chip[aria-pressed="true"],.chip[aria-checked="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chip[aria-pressed="true"] small,.chip[aria-checked="true"] small{color:inherit;opacity:.85}
+.seg{display:flex;border:1px solid var(--rule);border-radius:12px;overflow:hidden;background:var(--raised);padding:3px;gap:3px}
+.seg button{flex:1;border:0;background:transparent;color:var(--ink-2);padding:8px 8px;min-height:42px;border-radius:9px;cursor:pointer;font-weight:600;font-size:.9rem;transition:background .15s,color .15s}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.seg.sm button{font-size:.8rem;min-height:40px;padding:6px 6px}
+.seg.sm button small{display:block;font:.68rem var(--f-mono);opacity:.8}
+.field{display:flex;flex-direction:column;gap:8px;min-width:0}
+.field>label,.field>.lbl{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font:600 .8rem var(--f-body);color:var(--ink-2)}
+.field output{font:720 1.15rem var(--f-display);font-stretch:80%;color:var(--ink);font-variant-numeric:tabular-nums}
+.field .hint{font-size:.8rem;color:var(--ink-3)}
+.controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 22px}
+@media (max-width:560px){.controls{grid-template-columns:minmax(0,1fr)}}
+.switches{display:grid;gap:8px}
+.seg.dir{max-width:440px}
+.chips.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.chips.grid .chip{width:100%;min-width:0}
+.chips.grid.routes{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (max-width:640px){.chips.grid{grid-template-columns:repeat(2,minmax(0,1fr))} .chips.grid.routes{grid-template-columns:minmax(0,1fr)}}
+input[type=date]{font:600 1rem var(--f-body);color:var(--ink);background:var(--raised);border:1px solid var(--rule);border-radius:12px;padding:10px 12px;min-height:48px;width:100%}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:40px;background:transparent;margin:0;touch-action:pan-y;--p:50%}
+input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:4px;background:linear-gradient(90deg,var(--accent) var(--p),var(--sunk) var(--p))}
+input[type=range]::-moz-range-track{height:8px;border-radius:4px;background:var(--sunk)}
+input[type=range]::-moz-range-progress{height:8px;border-radius:4px;background:var(--accent)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;border-radius:50%;background:var(--raised);border:3px solid var(--accent);box-shadow:0 2px 6px rgba(0,0,0,.25);margin-top:-10px}
+input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--raised);border:3px solid var(--accent);box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.minis{display:flex;gap:6px;flex-wrap:wrap}
+.minis button{font:600 .78rem var(--f-mono);border:1px solid var(--rule);background:var(--raised);color:var(--ink-2);border-radius:999px;padding:6px 11px;min-height:36px;cursor:pointer}
+.minis button:hover{color:var(--ink);border-color:var(--ink-3)}
+.minis button[aria-pressed="true"]{background:var(--accent-soft);color:var(--ink);border-color:var(--accent)}
+.switch{display:flex;align-items:flex-start;gap:12px;cursor:pointer;font-size:.92rem;min-height:44px;padding:10px 12px;border-radius:12px;background:var(--raised);border:1px solid var(--rule)}
+.switch input{appearance:none;-webkit-appearance:none;flex:none;width:44px;height:26px;border-radius:999px;background:var(--sunk);border:1px solid var(--rule);position:relative;cursor:pointer;margin:0;transition:background .2s}
+.switch input::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:var(--raised);box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .2s}
+.switch input:checked{background:var(--accent);border-color:var(--accent)}
+.switch input:checked::after{transform:translateX(18px)}
+.field>label.switch{justify-content:flex-start;align-items:flex-start;font:inherit;font-size:.92rem;color:inherit}
+.switch b{font-weight:700;color:var(--ink)}
+.switch span{color:var(--ink-2)}
+.btn{display:inline-flex;align-items:center;gap:8px;font:700 .88rem var(--f-body);border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);border-radius:12px;padding:9px 14px;min-height:44px;cursor:pointer;transition:transform .15s}
+.btn:active{transform:scale(.97)}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn svg{width:18px;height:18px;flex:none}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.stack{display:flex;flex-direction:column;gap:14px}
+
+/* ---------- summary ---------- */
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:640px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{background:var(--raised);border:1px solid var(--rule);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.stat .k{font:600 .7rem var(--f-mono);letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
+.stat .v{font:740 2.15rem/1 var(--f-display);font-stretch:74%;font-variant-numeric:tabular-nums;letter-spacing:-.005em}
+.stat .v small{font-size:.5em;font-weight:600;font-stretch:90%;color:var(--ink-2);margin-left:3px}
+.stat .s{font-size:.8rem;color:var(--ink-2)}
+.stat .bar{height:6px;border-radius:3px;background:var(--sunk);overflow:hidden;margin-top:4px;position:relative}
+.stat .bar i{position:absolute;inset:0 auto 0 0;border-radius:3px;background:var(--good);transition:width .4s ease}
+.stat.alert{border-color:var(--bad)} .stat.alert .v{color:var(--bad)} .stat.alert .bar i{background:var(--bad)}
+.stat.ok .v{color:var(--good)}
+
+/* ---------- start strip ---------- */
+.strip-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.yearsw{display:inline-flex;align-items:center;border:1px solid var(--rule);border-radius:999px;background:var(--raised)}
+.yearsw button{border:0;background:transparent;width:40px;height:38px;cursor:pointer;color:var(--ink-2);font-size:1.1rem;border-radius:999px}
+.yearsw b{font:760 1.05rem var(--f-display);font-stretch:90%;min-width:3.4ch;text-align:center;font-variant-numeric:tabular-nums}
+.strip-box{position:relative;padding-top:30px}
+.strip{position:relative;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:2px;height:58px;border-radius:12px;overflow:hidden;cursor:pointer;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.strip div{position:relative;background:var(--sunk);transition:background-color .25s}
+.strip div.over{background-image:repeating-linear-gradient(135deg,transparent 0 3px,rgba(0,0,0,.3) 3px 5px)}
+.strip-cur{position:absolute;top:22px;bottom:-6px;width:0;pointer-events:none;transition:left .2s ease}
+.strip-cur::before{content:"";position:absolute;left:-2px;top:8px;bottom:0;width:4px;border-radius:2px;background:var(--ink);box-shadow:0 0 0 2px var(--surface)}
+.strip-cur span{position:absolute;bottom:calc(100% - 8px);left:0;transform:translateX(-50%);font:700 .74rem var(--f-mono);white-space:nowrap;background:var(--ink);color:var(--bg);padding:3px 8px;border-radius:999px}
+.strip-best{position:absolute;top:22px;width:0;pointer-events:none}
+.strip-best::before{content:"";position:absolute;left:-6px;top:-1px;border:6px solid transparent;border-top:8px solid var(--good)}
+.strip-months{display:grid;grid-template-columns:repeat(12,1fr);font:.7rem var(--f-mono);color:var(--ink-3);margin-top:6px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.8rem;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:12px;height:12px;border-radius:3px;display:inline-block;flex:none}
+.grad{width:110px;height:10px;border-radius:3px;display:inline-block}
+.note-line{font-size:.9rem;color:var(--ink-2);margin-bottom:12px;max-width:72ch}
+.note-line b{color:var(--ink)}
+
+/* ---------- map ---------- */
+.map-card{display:flex;flex-direction:column;gap:12px;box-shadow:var(--shadow);padding:12px}
+.map-box{position:relative;height:clamp(380px,72vh,640px);border-radius:12px;overflow:hidden;background:var(--sea)}
+@media (min-width:980px){.map-box{height:clamp(420px,calc(100vh - var(--tb-h) - 250px),980px)}}
+.map-box svg{display:block;width:100%;height:100%;touch-action:pan-y;cursor:grab}
+.map-box svg:active{cursor:grabbing}
+.map-card.full{position:fixed;inset:0;z-index:70;border-radius:0;border:0;padding:max(10px,env(safe-area-inset-top,0px)) max(10px,env(safe-area-inset-right,0px)) max(10px,env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px));background:var(--bg)}
+.map-card.full .map-box{flex:1;height:auto}
+.map-card.full .map-box svg{touch-action:none}
+.map-tools{position:absolute;top:10px;right:10px;display:flex;flex-direction:column;gap:6px;z-index:2}
+.map-tools button{width:42px;height:42px;border-radius:12px;border:1px solid var(--rule);background:var(--raised);color:var(--ink);display:grid;place-items:center;cursor:pointer;box-shadow:0 2px 8px -2px rgba(0,0,0,.25)}
+.map-tools button svg{width:20px;height:20px}
+.map-tools button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.map-title{position:absolute;top:10px;left:10px;z-index:2;display:flex;flex-direction:column;gap:2px;pointer-events:none;max-width:calc(100% - 70px)}
+.map-title b{font:780 .82rem var(--f-display);font-stretch:112%;text-transform:uppercase;letter-spacing:.06em;background:var(--raised);padding:4px 9px;border-radius:8px;align-self:flex-start;border:1px solid var(--rule)}
+.map-title .cap{background:var(--raised);border:1px solid var(--rule);padding:3px 8px;border-radius:8px;align-self:flex-start;color:var(--ink-2);opacity:.94;max-width:100%}
+.map-hint{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);z-index:2;font-size:.78rem;background:var(--ink);color:var(--bg);padding:6px 12px;border-radius:999px;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}
+.map-hint.on{opacity:.92}
+.map-tip{position:absolute;z-index:3;pointer-events:none;background:var(--raised);border:1px solid var(--rule);border-radius:10px;padding:6px 10px;font-size:.8rem;box-shadow:var(--shadow);white-space:nowrap;transform:translate(-50%,calc(-100% - 12px))}
+.map-tip[hidden]{display:none}
+.map-tip b{font-family:var(--f-display);font-stretch:90%}
+.scrub{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;gap:8px;align-items:center}
+.play{width:48px;height:48px;border-radius:50%;border:0;background:var(--accent);color:var(--accent-ink);cursor:pointer;display:grid;place-items:center;box-shadow:0 4px 14px -6px var(--accent)}
+.play svg{width:20px;height:20px;fill:currentColor}
+.tiny{font:700 .76rem var(--f-mono);border:1px solid var(--rule);background:var(--raised);color:var(--ink-2);border-radius:999px;padding:0 10px;height:36px;cursor:pointer;white-space:nowrap}
+.tiny[aria-pressed="true"]{background:var(--accent-soft);color:var(--ink);border-color:var(--accent)}
+.readout{display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 12px;align-items:center;min-height:3.6em}
+.readout .badge{grid-row:1/span 3;min-width:46px;padding:0 9px;white-space:nowrap;height:46px;border-radius:12px;display:grid;place-items:center;font:800 .7rem var(--f-mono);color:var(--cell-ink);text-transform:uppercase;letter-spacing:.04em;text-align:center;line-height:1.1}
+.readout .t{font:760 1.08rem var(--f-display);font-stretch:96%}
+.readout .d{font-size:.84rem;color:var(--ink-2)}
+.readout .d b{color:var(--ink)}
+.legend.map-leg{font-size:.76rem}
+.f-D{fill:var(--c-D)} .f-M{fill:var(--c-M)} .f-B{fill:var(--c-B)} .f-H{fill:var(--c-H)} .f-K{fill:var(--c-K)} .f-W{fill:var(--c-W)} .f-C{fill:var(--c-C)} .f-T{fill:var(--c-T)}
+.s-D{stroke:var(--c-D)} .s-M{stroke:var(--c-M)} .s-B{stroke:var(--c-B)} .s-H{stroke:var(--c-H)} .s-K{stroke:var(--c-K)} .s-W{stroke:var(--c-W)} .s-C{stroke:var(--c-C)} .s-T{stroke:var(--c-T)}
+.bg-D{background:var(--c-D)} .bg-M{background:var(--c-M)} .bg-B{background:var(--c-B)} .bg-H{background:var(--c-H)} .bg-K{background:var(--c-K)} .bg-W{background:var(--c-W)} .bg-C{background:var(--c-C)} .bg-T{background:var(--c-T)}
+.land{fill:var(--land);stroke:var(--land-edge);stroke-width:.6;vector-effect:non-scaling-stroke}
+.land.tint{fill-opacity:.36}
+.land.tint.f-D{fill:var(--c-D)} .land.tint.f-M{fill:var(--c-M)} .land.tint.f-B{fill:var(--c-B)} .land.tint.f-H{fill:var(--c-H)} .land.tint.f-K{fill:var(--c-K)} .land.tint.f-W{fill:var(--c-W)} .land.tint.f-C{fill:var(--c-C)} .land.tint.f-T{fill:var(--c-T)}
+.grat{fill:none;stroke:var(--land-edge);stroke-opacity:.35;stroke-width:.5;vector-effect:non-scaling-stroke}
+.ghost{fill:none;stroke:var(--route-ghost);stroke-width:1.5;stroke-dasharray:3 4;vector-effect:non-scaling-stroke}
+.rcase{fill:none;stroke:var(--case);stroke-width:8;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;opacity:.92;transition:opacity .2s}
+.rcase.paved{stroke-width:6.5}
+.rcase.bus{stroke-width:5;opacity:.6}
+.rday{fill:none;stroke-width:4.6;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;transition:opacity .2s}
+.rday.paved{stroke-width:3}
+.rday.bus{stroke-dasharray:1 6;stroke-width:3.4}
+.xfer{fill:none;stroke:var(--ink-2);stroke-width:1.5;stroke-dasharray:6 5;vector-effect:non-scaling-stroke}
+.city{fill:var(--raised);stroke:var(--ink);stroke-width:1.5}
+.city.big{stroke-width:2.5}
+.city-l{font:700 11px var(--f-display);fill:var(--ink);paint-order:stroke;stroke:var(--surface);stroke-width:3.5px;stroke-linejoin:round;letter-spacing:.02em}
+.rider{fill:var(--ink);stroke:var(--raised);stroke-width:3}
+.rider-halo{fill:var(--glow);opacity:.35}
+.rider-pulse{fill:none;stroke:var(--glow);stroke-width:2;opacity:.8;transform-box:fill-box;transform-origin:center;animation:pulse 1.8s ease-out infinite}
+@keyframes pulse{from{transform:scale(.6);opacity:.9} to{transform:scale(2.2);opacity:0}}
+
+/* ---------- charts ---------- */
+.chart-cap{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 10px;align-items:start;font-size:.84rem;color:var(--ink-2);min-height:2.4em;margin-bottom:6px}
+.chart-cap b{color:var(--ink)}
+.chart-cap .dot{width:10px;height:10px;border-radius:3px;margin-top:.38em}
+#chart svg,#lenChart svg{display:block;width:100%;height:auto;touch-action:pan-y}
+#chart svg{cursor:crosshair}
+.axis text{font:500 10px var(--f-mono);fill:var(--ink-3)}
+.gridl{stroke:var(--rule);stroke-dasharray:2 3}
+.lbl-s{font:600 10px var(--f-mono);fill:var(--ink-2)}
+.scrubline{stroke:var(--ink);stroke-width:1.5}
+.lenbar{cursor:pointer;transition:opacity .15s}
+.lenbar:hover{opacity:.85}
+.len-lbl{font:700 12px var(--f-display);fill:var(--ink);font-stretch:85%}
+.len-x{font:600 11px var(--f-mono);fill:var(--ink-2)}
+
+/* ---------- matrix + pins ---------- */
+.mx-wrap,.rm-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-inline:-4px;padding-inline:4px}
+table.rm{border-collapse:separate;border-spacing:3px;width:100%;min-width:600px}
+.rm th{font:600 .7rem var(--f-mono);color:var(--ink-3);text-align:center;padding:2px 0;white-space:nowrap}
+.rm th.rh{text-align:left;color:var(--ink);font:700 .86rem var(--f-display);font-stretch:92%;padding-right:10px;min-width:150px;width:1%;white-space:nowrap;position:sticky;left:0;background:var(--surface);z-index:1}
+.rm th.rh small{display:block;font:500 .68rem var(--f-mono);color:var(--ink-3)}
+.rm td{padding:0}
+.rm td button{width:100%;height:38px;border:0;border-radius:7px;font:700 .74rem var(--f-mono);color:var(--cell-ink);cursor:pointer;background:var(--sunk);font-variant-numeric:tabular-nums;transition:transform .12s}
+.rm td button:hover{transform:scale(1.06)}
+.rm td button.over{background-image:repeating-linear-gradient(135deg,transparent 0 3px,rgba(0,0,0,.28) 3px 5px)}
+.rm td button.on{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--ink)}
+.pins{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,210px),1fr));gap:10px;margin-top:14px}
+.pin{background:var(--raised);border:1px solid var(--rule);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.pin h3{font-size:.98rem}
+.pin dl{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;margin:0;font-size:.82rem}
+.pin dt{color:var(--ink-3);font-family:var(--f-mono);font-size:.72rem;align-self:center}
+.pin dd{margin:0;font-variant-numeric:tabular-nums;text-align:right;font-weight:600}
+.pin .row{margin-top:auto}
+.pin .best{color:var(--good)}
+.empty{font-size:.88rem;color:var(--ink-3);padding:12px;border:1px dashed var(--rule);border-radius:12px}
+
+/* ---------- flags ---------- */
+.flags{display:flex;flex-direction:column;gap:8px;margin:0;padding:0;list-style:none}
+.flags li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:start;padding:10px 12px 10px 10px;border-radius:12px;background:var(--raised);border:1px solid var(--rule);border-left:4px solid var(--ink-3);font-size:.9rem}
+.flags li .tag{font:700 .64rem var(--f-mono);letter-spacing:.07em;text-transform:uppercase;padding:3px 7px;border-radius:6px;white-space:nowrap;color:var(--ink-2);background:var(--sunk)}
+.flags li.bad{border-left-color:var(--bad)} .flags li.bad .tag{color:var(--bad)}
+.flags li.warn{border-left-color:var(--warn)} .flags li.warn .tag{color:var(--warn)}
+.flags li.good{border-left-color:var(--good)} .flags li.good .tag{color:var(--good)}
+.flags li b{font-weight:700}
+
+/* ---------- legs ---------- */
+.legs{display:flex;flex-direction:column;gap:8px}
+.leg{background:var(--raised);border:1px solid var(--rule);border-radius:14px;overflow:hidden;transition:border-color .2s,box-shadow .2s}
+.leg.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.leg-head{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 12px;align-items:center;width:100%;border:0;background:transparent;text-align:left;padding:12px 14px;cursor:pointer}
+.leg-head .n{font:700 .74rem var(--f-mono);color:var(--ink-3);width:2.2ch}
+.leg-head .n svg{display:block;width:17px;height:17px}
+.leg-head .tt{min-width:0;display:flex;flex-direction:column;gap:1px}
+.leg-head .tt b{font:760 1.02rem var(--f-display);font-stretch:96%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.leg-head .tt span{font:.76rem var(--f-mono);color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.leg-head .rt{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.leg-head .rt b{font:720 1.05rem var(--f-display);font-stretch:78%;font-variant-numeric:tabular-nums}
+.mtag{font:700 .64rem var(--f-mono);letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:6px;background:var(--sunk);color:var(--ink-2);white-space:nowrap}
+.mtag.dirt{background:var(--accent-soft);color:var(--ink)}
+.leg-head .chev{grid-column:3;grid-row:1;display:none}
+.leg-head .mini{grid-column:1/-1;display:flex;height:8px;border-radius:4px;overflow:hidden;margin-top:6px}
+.leg-head .mini i{flex:1;min-width:0}
+.leg-head .mini i.rest{opacity:.45}
+.leg-body{padding:0 14px 14px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,300px);gap:14px 20px;border-top:1px dashed var(--rule);padding-top:12px}
+.leg-body[hidden]{display:none}
+@media (max-width:760px){.leg-body{grid-template-columns:minmax(0,1fr)}}
+.leg .note{font-size:.9rem;color:var(--ink-2)}
+.leg .nums{display:flex;gap:6px 14px;flex-wrap:wrap;font:.78rem var(--f-mono);color:var(--ink-2);margin-top:8px}
+.leg .nums b{color:var(--ink)}
+.leg .src{font-size:.8rem;color:var(--ink-3);margin-top:6px}
+.leg .src a{color:var(--ink-2)}
+.leg .opts{display:flex;flex-direction:column;gap:8px}
+.leg .hwy{font-size:.8rem;color:var(--warn)}
+.leg .note.risk{margin-top:8px;font-size:.84rem}
+.leg .note.risk b{color:var(--bad)}
+.leg.xfer-leg{background:transparent;border-style:dashed}
+.leg.xfer-leg .leg-head{cursor:default}
+
+/* ---------- season table ---------- */
+table.mx{border-collapse:separate;border-spacing:2px;font-size:.78rem;min-width:640px;width:100%}
+.mx th{font:500 .7rem var(--f-mono);color:var(--ink-3);text-align:center;padding:2px 0;white-space:nowrap}
+.mx th.rh{text-align:left;color:var(--ink);font:700 .86rem var(--f-display);font-stretch:92%;padding-right:8px;min-width:140px;position:sticky;left:0;background:var(--surface);z-index:1}
+.mx td{height:28px;border-radius:5px;text-align:center;font:700 .7rem var(--f-mono);color:var(--cell-ink);opacity:.4}
+.mx td.on{opacity:1;box-shadow:inset 0 0 0 2px var(--ink)}
+.mx th.yr{color:var(--ink);font-weight:700}
+
+/* ---------- sources, footer ---------- */
+.sources{columns:2 320px;column-gap:28px;font-size:.88rem;color:var(--ink-2)}
+.sources p{break-inside:avoid;margin-bottom:10px}
+.sources b{color:var(--ink)}
+footer{font-size:.8rem;color:var(--ink-3);max-width:90ch;padding-bottom:24px}
+
+/* ---------- bottom tab bar (phones) ---------- */
+.tabbar{display:none}
+@media (max-width:979px){
+  .tabbar{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--surface);border-top:1px solid var(--rule);padding:4px max(6px,env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0px) max(6px,env(safe-area-inset-left,0px));box-shadow:0 -8px 24px -18px rgba(0,0,0,.45)}
+  .tabbar a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;height:56px;text-decoration:none;color:var(--ink-3);font:700 .68rem var(--f-body);letter-spacing:.02em;border-radius:12px}
+  .tabbar a svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .tabbar a.on{color:var(--accent)}
+  .tabbar a.on svg{background:var(--accent-soft);border-radius:999px;padding:2px 12px;width:46px;box-sizing:content-box;height:20px}
+}
+@media (max-width:979px){ footer{order:13} }
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+</style>
+
+</head>
+<body>
+
+<header class="hero">
+  <img src="hero.webp" alt="Painted panorama of the ride: Baja cacti, a smoking Central American volcano, Andean salt flats and the granite towers of Patagonia, with a loaded bikepacker on a dirt road" width="1600" height="900" decoding="async" fetchpriority="high">
+  <div class="hero-in wrap">
+    <span class="kicker">Baja · Central America · Andes · Patagonia</span>
+    <h1>Dry Season<span>Route Planner</span></h1>
+    <p class="lede">Pick a route and a start date. Every day of the ride is placed on the map and checked against the season where you will be, so you can chase the dry months on dirt and back roads and still finish inside a year.</p>
+  </div>
+  <span class="credit">Artwork made in Canva</span>
+</header>
+
+<div class="tripbar" role="region" aria-label="Trip at a glance">
+  <div class="wrap">
+    <div class="tb-route"><b id="tbRoute">Cartagena → Ushuaia</b><span id="tbStart"></span></div>
+    <div class="tb-stats">
+      <div class="tb-stat"><b id="tbDays">0</b><span>days</span></div>
+      <div class="tb-stat"><b id="tbFit">0%</b><span>in season</span></div>
+      <div class="tb-stat tb-hide"><b id="tbEnd">–</b><span>finish</span></div>
+      <span class="pill good" id="tbPill"><span class="pl">Inside 12 months</span></span>
+    </div>
+  </div>
+</div>
+
+<main class="console wrap">
+  <section class="card map-card" id="s-map" aria-labelledby="h-map">
+    <div class="map-box" id="mapBox">
+      <div class="map-title"><b id="h-map">Route map</b><span class="cap" id="mapSub">Season on the selected day</span></div>
+      <div class="map-tools" role="group" aria-label="Map controls">
+        <button type="button" id="zIn" aria-label="Zoom in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+        <button type="button" id="zOut" aria-label="Zoom out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14"/></svg></button>
+        <button type="button" id="zFit" aria-label="Show the whole route"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+        <button type="button" id="zFull" aria-label="Full screen map" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H3v6M15 3h6v6M9 21H3v-6M15 21h6v-6M3 3l7 7M21 3l-7 7M3 21l7-7M21 21l-7-7"/></svg></button>
+      </div>
+      <div class="map-tip" id="mapTip" hidden></div>
+      <div class="map-hint" id="mapHint"></div>
+      <div id="map"></div>
+    </div>
+    <div class="scrub">
+      <button class="play" id="play" type="button" aria-label="Play the trip"><svg viewBox="0 0 24 24" id="playIcon"><path d="M7 4l13 8-13 8z"/></svg></button>
+      <button class="tiny" id="speed" type="button" aria-label="Playback speed">2×</button>
+      <input type="range" id="day" min="0" max="100" value="0" aria-label="Day of the trip">
+      <button class="tiny" id="follow" type="button" aria-pressed="false">Follow</button>
+    </div>
+    <div class="readout" id="readout" aria-live="polite"></div>
+    <div class="legend map-leg"><span><svg width="26" height="8" aria-hidden="true"><line x1="2" y1="4" x2="24" y2="4" class="s-D" stroke-width="4" stroke-linecap="round"/></svg>Dirt &amp; trails</span><span><svg width="26" height="8" aria-hidden="true"><line x1="2" y1="4" x2="24" y2="4" class="s-D" stroke-width="3"/></svg>Main road</span><span><svg width="26" height="8" aria-hidden="true"><line x1="2" y1="4" x2="24" y2="4" class="s-D" stroke-width="3" stroke-dasharray="1 6" stroke-linecap="round"/></svg>Bus</span><span><svg width="26" height="8" aria-hidden="true"><line x1="2" y1="4" x2="24" y2="4" style="stroke:var(--ink-2)" stroke-width="1.5" stroke-dasharray="6 5"/></svg>Boat or flight</span><span>Line colour is the season on the day you ride it. Tap the route to jump to that day.</span></div>
+  </section>
+
+  <div class="pane-main">
+    <section class="card" id="s-summary" aria-labelledby="h-sum">
+      <div class="card-h"><h2 id="h-sum">Your trip</h2>
+        <div class="row"><button class="btn ghost" type="button" id="pinBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5M9 3h6l-1 6 3 3v2H7v-2l3-3z"/></svg>Pin to compare</button><button class="btn ghost" type="button" id="copyBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg><span id="copyLbl">Copy itinerary</span></button><button class="btn ghost" type="button" id="shareBtn" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4"/></svg><span id="shareLbl">Share plan</span></button></div>
+      </div>
+      <div class="stats" id="summary"></div>
+    </section>
+
+    <section class="card" id="s-picks" aria-labelledby="h-picks">
+      <div class="card-h"><h2 id="h-picks">Quick picks</h2><span class="cap">Tap a scenario to load it</span></div>
+      <div class="chips grid" id="presets"></div>
+    </section>
+
+    <section class="card" id="s-when" aria-labelledby="h-when">
+      <div class="card-h"><h2 id="h-when">When to leave</h2><span class="cap">Every start week scored for this route and pace</span></div>
+      <p class="note-line" id="stripText"></p>
+      <div class="strip-top">
+        <div class="yearsw"><button type="button" id="yPrev" aria-label="Previous year">‹</button><b id="stripYear">2027</b><button type="button" id="yNext" aria-label="Next year">›</button></div>
+        <button class="btn" type="button" id="useBest">Start on the best week</button>
+      </div>
+      <div class="strip-box">
+        <div class="strip" id="strip" role="slider" tabindex="0" aria-label="Start date by week" aria-valuemin="0" aria-valuemax="52"></div>
+        <span class="strip-best" id="stripBest" hidden></span>
+        <span class="strip-cur" id="stripCur"><span></span></span>
+      </div>
+      <div class="strip-months" id="stripMonths"></div>
+      <div class="legend" style="margin-top:10px"><span><i class="grad" id="gradSw"></i>Share of route ridden in season, poor to great</span><span><i class="sw" style="background-image:repeating-linear-gradient(135deg,transparent 0 3px,rgba(0,0,0,.35) 3px 5px);background-color:var(--sunk)"></i>Over 12 months</span><span><svg width="12" height="10" aria-hidden="true"><path d="M0 0h12L6 9z" style="fill:var(--good)"/></svg>Best start</span></div>
+    </section>
+
+    <section class="card" id="s-plan" aria-labelledby="h-plan">
+      <div class="card-h"><h2 id="h-plan">Your plan</h2>
+        <div class="row"><button class="btn ghost" id="allDirt" type="button">All dirt</button><button class="btn ghost" id="allPaved" type="button">All main roads</button></div>
+      </div>
+      <div class="stack">
+        <div class="field"><span class="lbl">Route</span><div class="chips grid routes" id="routes" role="radiogroup" aria-label="Route"></div></div>
+        <div class="field"><span class="lbl">Direction</span>
+          <div class="seg dir" role="group" aria-label="Direction"><button type="button" id="dirS" aria-pressed="true">Southbound</button><button type="button" id="dirN" aria-pressed="false">Northbound</button></div>
+        </div>
+        <div class="controls">
+          <div class="field"><label for="start">Start date <output id="startOut"></output></label>
+            <input type="date" id="start">
+            <div class="minis" id="dateBtns"></div>
+          </div>
+          <div class="field"><label for="kmpd">Riding day distance <output id="kmpdOut"></output></label>
+            <input type="range" id="kmpd" min="50" max="170" step="5">
+            <span class="hint">On smooth sealed road. Dirt, climbs and wind cut this on each leg.</span>
+          </div>
+          <div class="field"><label for="rest">Rest day every <output id="restOut"></output></label>
+            <input type="range" id="rest" min="3" max="12" step="1">
+            <span class="hint">One easy day off the bike after this many riding days.</span>
+          </div>
+          <div class="field"><label for="brk">Long break length <output id="brkOut"></output></label>
+            <input type="range" id="brk" min="1" max="10" step="1">
+            <span class="hint">Choose where to stop in Leg by leg. <output id="brkCount" style="font:inherit;color:inherit"></output></span>
+          </div>
+        </div>
+        <div class="switches">
+          <label class="switch" for="ramp"><input type="checkbox" id="ramp"><span><b>Build fitness</b>: ride about two thirds of your distance for the first 2 weeks, working up to the full distance by week 6.</span></label>
+          <label class="switch" for="dirtPref"><input type="checkbox" id="dirtPref"><span><b>Favour dirt, B roads and trails</b>, the way Dan Camp and Iohan rode it. Major highways are avoided where there is another way; big cities are still on the route.</span></label>
+          <label class="switch" for="auto"><input type="checkbox" id="auto"><span><b>Auto-pick each leg</b> (dirt, main road or bus) for the best season fit inside 12 months. Mapped dirt routes stay on dirt, and legs with a travel warning go by bus. Turns off when you choose a leg yourself.</span></label>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" id="s-length" aria-labelledby="h-len">
+      <div class="card-h"><h2 id="h-len">How long?</h2><span class="cap">Daily distance needed to finish in each length of trip</span></div>
+      <p class="note-line" id="lenText"></p>
+      <div id="lenChart"></div>
+      <div class="legend" style="margin-top:6px"><span><i class="sw" style="background:var(--good)"></i>At or under your pace</span><span><i class="sw" style="background:var(--warn)"></i>Faster, up to your 160 km peak</span><span><i class="sw" style="background:var(--bad)"></i>Beyond your peak</span><span>Tap a bar to use that pace</span></div>
+    </section>
+
+    <section class="card" id="s-weather" aria-labelledby="h-chart">
+      <div class="card-h"><h2 id="h-chart">Weather along the way</h2><span class="cap">Bars: monthly rain · lines: day high and night low</span></div>
+      <div class="chart-cap" id="chartCap"></div>
+      <div id="chart"></div>
+      <div class="legend" id="legend" style="margin-top:8px"></div>
+    </section>
+
+    <section class="card" id="s-flags" aria-labelledby="h-flags">
+      <div class="card-h"><h2 id="h-flags">Tight spots</h2><span class="cap" id="flagCount"></span></div>
+      <ul class="flags" id="flags"></ul>
+    </section>
+
+    <section class="card" id="s-compare" aria-labelledby="h-cmp">
+      <div class="card-h"><h2 id="h-cmp">Compare routes and months</h2><span class="cap" id="rmCap">Season fit for a start on the 1st of each month</span></div>
+      <p class="note-line" id="rmText">Every route in both directions, scored with your pace and breaks and the best mix of dirt, main roads and bus for each start. Tap a cell to load it.</p>
+      <div class="rm-wrap"><table class="rm" id="rm"></table></div>
+      <h3 style="margin-top:18px">Pinned plans</h3>
+      <div class="pins" id="pins"></div>
+    </section>
+
+    <section id="s-legs" aria-labelledby="h-legs" class="card">
+      <div class="card-h"><h2 id="h-legs">Leg by leg</h2><div class="row"><span class="cap">Tap a leg for notes, road choice and breaks</span><button class="tiny" type="button" id="expandAll">Open all</button></div></div>
+      <div class="legs" id="legs"></div>
+    </section>
+
+    <section class="card" id="s-season" aria-labelledby="h-mx">
+      <div class="card-h"><h2 id="h-mx">Season chart</h2><span class="cap">Outlined cells are when you are there, with the number of days</span></div>
+      <div class="mx-wrap"><table class="mx" id="mx"></table></div>
+    </section>
+
+    <section class="card" id="s-sources" aria-labelledby="h-src">
+      <div class="card-h"><h2 id="h-src">Routes and sources</h2></div>
+      <div class="sources">
+        <p><b>Road choice.</b> Each leg has a dirt version and a main-road version. Five legs follow a mapped bikepacking.com dirt route (Baja Divide, Trans Ecuador, Peru Great Divide, Lagunas y Salares and the Seis Miles), and auto-pick never moves those onto a highway, though it may suggest a bus. Elsewhere the dirt line links back roads between the towns shown, and the main-road distance is the road distance between the same towns.</p>
+        <p><b>Safety.</b> Two legs cross areas with current government warnings, and auto-pick buses them: Mazatlán to Durango and Zacatecas (<a href="https://www.cronista.com/en/today/us-issues-level-4-travel-warning-for-six-mexican-states-which-areas-to-avoid-and-the-risks/" target="_blank" rel="noopener">US advisory, Oct 2026</a>), and the Bajo Cauca between Cartagena and Medellín (<a href="https://gov.uk/foreign-travel-advice/colombia/regional-risks" target="_blank" rel="noopener">UK advice, Oct 2026</a>). Check both again before you go.</p>
+        <p><b>Baja Divide</b> (bikepacking.com): 2,784 km of sandy dirt from the US border down the peninsula, about 42 days, best Nov to Mar. <a href="https://bikepacking.com/routes/baja-divide" target="_blank" rel="noopener">Route page</a></p>
+        <p><b>Trans-Mexico</b> (bikepacking.com), the Trans Mexico on your chart. Norte runs Mazatlán to Oaxaca (2,363 km, Dec to Apr) and Sur runs Oaxaca to Frontera Corozal (1,094 km, Nov to Mar); both are about half unpaved. The Mexico lines on the map follow the main towns, so use these for the actual dirt. <a href="https://bikepacking.com/routes/trans-mexico-norte/" target="_blank" rel="noopener">Norte</a> · <a href="https://bikepacking.com/routes/trans-mexico-sur/" target="_blank" rel="noopener">Sur</a></p>
+        <p><b>Dan Camp, Dan Cycles the World</b>: films from one Alaska to Argentina ride, across southern Mexico (Oaxaca to the Guatemala border), Oaxaca backroads, Nicaragua, southern Bolivia, and the Atacama and puna in Chile. <a href="https://bikepacking.com/news/bikepacking-across-mexico-video/" target="_blank" rel="noopener">S Mexico</a> · <a href="https://bikepacking.com/news/bikepacking-backroads-of-oaxaca-video/" target="_blank" rel="noopener">Oaxaca</a> · <a href="https://bikepacking.com/news/300-miles-across-nicaragua-video/" target="_blank" rel="noopener">Nicaragua</a> · <a href="https://bikepacking.com/news/bikepacking-wild-southern-bolivia-video/" target="_blank" rel="noopener">S Bolivia</a> · <a href="https://bikepacking.com/news/dan-camp-bikepacking-chile-video/" target="_blank" rel="noopener">Atacama</a></p>
+        <p><b>Trans Ecuador Mountain Bike Route</b> (bikepacking.com): the dirt road version is used here, 1,381 km to Vilcabamba, mid-June to mid-September. Iohan rode the singletrack version. <a href="https://bikepacking.com/routes/trans-ecuador-dirt-road/" target="_blank" rel="noopener">Dirt road</a> · <a href="https://bikepacking.com/routes/trans-ecuador-singletrack/" target="_blank" rel="noopener">Singletrack</a></p>
+        <p><b>Peru Great Divide</b> (bikepacking.com): high dirt route along the Andes from Huaraz to Abancay, 1,605 km, about 32 days, April or May to September. <a href="https://bikepacking.com/routes/peru-great-divide/" target="_blank" rel="noopener">Route page</a></p>
+        <p><b>Ruta de las Tres Cordilleras</b> (bikepacking.com): Sorata to Pitumarca near Cusco, 793 km, mid-May to early September. The dirt option for Cusco to La Paz. <a href="https://bikepacking.com/routes/tres-cordilleras-boliva-peru" target="_blank" rel="noopener">Route page</a></p>
+        <p><b>Lagunas y Salares</b> (bikepacking.com): the Salar and the Lagunas to Chile, 734 km, May to October. <a href="https://bikepacking.com/routes/lagunas-y-salares/" target="_blank" rel="noopener">Route page</a></p>
+        <p><b>Ruta de los Seis Miles</b> (bikepacking.com). Norte: San Pedro de Atacama to Fiambalá over Paso Socompa, 784 km, Nov to Mar. Sur: Fiambalá to Guandacol, 526 km, Oct to Apr, north to south only. <a href="https://bikepacking.com/routes/ruta-seis-miles-norte/" target="_blank" rel="noopener">Norte</a> · <a href="https://bikepacking.com/routes/ruta-seis-miles-sur/" target="_blank" rel="noopener">Sur</a></p>
+        <p><b>Iohan Gueorguiev, The Bike Wanderer</b>: Colombia from December 2016 to May 2017, the Trans Ecuador singletrack, Las Tres Cordilleras and To Titicaca via the Land of Gold in southern Peru, and the Ruta de los Seis Miles. <a href="https://www.bikewanderer.com/on-the-road/tag/colombia" target="_blank" rel="noopener">Colombia</a> · <a href="https://bikepacking.com/plog/iohan-trans-ecuador" target="_blank" rel="noopener">Ecuador</a> · <a href="https://www.bikewanderer.com/on-the-road//las-tres-cordilleras" target="_blank" rel="noopener">Tres Cordilleras</a> · <a href="https://www.bikewanderer.com/on-the-road//to-titicaca-via-the-land-of-gold" target="_blank" rel="noopener">Titicaca</a> · <a href="https://bikepacking.com/plog/bikepacking-ruta-seis-miles-iohan/" target="_blank" rel="noopener">Seis Miles</a></p>
+        <p><b>Boats and roads.</b> <a href="https://australbikes.cl/from-villa-ohiggins-to-el-chalten-an-adventure-across-lakes-forests-and-borders/" target="_blank" rel="noopener">Austral Bikes on the O'Higgins crossing</a> · <a href="https://foodtravelexplore.com/south-america/guide-boat-panama-to-colombia/" target="_blank" rel="noopener">Panama to Colombia by boat</a> · <a href="https://turismoruta40.com.ar/en/paved-gravel.html" target="_blank" rel="noopener">Ruta 40 paved and gravel</a> · <a href="https://tdaglobalcycling.com/2016/10/cycling-patagonia-everything-you-need-to-know/" target="_blank" rel="noopener">TDA on Patagonia</a></p>
+        <p><b>Climate.</b> Southern Colombia uses the IDEAM 1991 to 2020 normals for <a href="https://en.wikipedia.org/wiki/Popay%C3%A1n" target="_blank" rel="noopener">Popayán</a> and <a href="https://en.wikipedia.org/wiki/Pasto,_Colombia" target="_blank" rel="noopener">Pasto</a>. Seasons elsewhere were checked against 20 years of <a href="https://open-meteo.com/en/docs/historical-weather-api" target="_blank" rel="noopener">Open-Meteo</a> reanalysis and national station tables.</p>
+      </div>
+    </section>
+
+    <footer>Distances are planning numbers for each leg, not GPX totals: guide figures for the mapped routes, road distances between the towns for the main-road versions, and estimates elsewhere. Climate values are typical monthly averages for a representative spot on each leg, and nights at camp altitude in the Andes can run colder. Season bands follow your chart where it covers a region. Check the latest travel advice, conditions, border rules and boat schedules before you commit. Header artwork made in Canva.</footer>
+  </div>
+</main>
+
+<nav class="tabbar" aria-label="Sections">
+  <a href="#s-summary" data-s="s-summary"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Trip</a>
+  <a href="#s-map" data-s="s-map"><svg viewBox="0 0 24 24"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/></svg>Map</a>
+  <a href="#s-when" data-s="s-when"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>When</a>
+  <a href="#s-weather" data-s="s-weather"><svg viewBox="0 0 24 24"><path d="M7 18a4 4 0 0 1-.5-8A6 6 0 0 1 18 9a4.5 4.5 0 0 1-.5 9z"/><path d="M9 21l1-2M13 21l1-2"/></svg>Weather</a>
+  <a href="#s-legs" data-s="s-legs"><svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.2"/><circle cx="18" cy="18" r="2.2"/><path d="M8 6h7a3 3 0 0 1 0 6H9a3 3 0 0 0 0 6h7"/></svg>Legs</a>
+</nav>
+
+<script src="vendor/d3.min.js"></script>
+
+<script>window.DSRP_APP = true;</script>
+<script src="geo.js?v=8c798eafef"></script>
+<script src="app.js?v=1f6196b8a0"></script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });
+}
+</script>
+</body>
+</html>
