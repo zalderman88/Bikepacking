@@ -1,7 +1,7 @@
 /* Offline support for the Dry Season Route Planner.
    Pages: network first (so updates arrive), falling back to the saved copy when offline.
    Everything else: saved copy first. A new deploy changes VERSION, which refreshes the saved copy. */
-const VERSION = "cbb65a0b17";
+const VERSION = "aeefabb078";
 const CACHE = "dsrp-" + VERSION;
 const ASSETS = [
   "./",
